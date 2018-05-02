@@ -1,0 +1,21 @@
+{
+  "name": "message-api",
+  "version": "1.0.0",
+  "description": "api message",
+  "dependencies": {
+    "bluebird": "latest",
+    "body-parser": "^1.17.1",
+    "express": "^4.6.2",
+    "mocha": "^3.2.0",
+    "mongoose": "^4.9.5",
+    "mongoose-timestamps": "0.0.1",
+    "nodemon": "^1.12.1"
+  },
+  "engines": {
+    "node": "6.11.1"
+ },
+  "devDependencies": {},
+  "scripts": {
+    "start": "nodemon"
+  }
+}
