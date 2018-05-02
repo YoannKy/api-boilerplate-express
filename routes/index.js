@@ -13,4 +13,5 @@ module.exports = (server) => {
     });
 
     server.use('/', require('./home')(server));
+    server.use('/google', require('./google')(server));
 };
