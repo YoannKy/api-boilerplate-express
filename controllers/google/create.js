@@ -16,79 +16,94 @@ module.exports = (server) => {
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
-const http = require('http');
-const url = require('url');
-const querystring = require('querystring');
-const opn = require('opn');
-const destroyer = require('server-destroy');
-
+const mkdirp = require('mkdirp');
+const readline = require('readline');
 const {google} = require('googleapis');
-const plus = google.plus('v1');
+const OAuth2Client = google.auth.OAuth2;
+const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const TOKEN_PATH = 'credentials.json';
+console.log(process.cwd());
+// Load client secrets from a local file.
+  fs.readFile('./settings/client_secret.json', (err, content) => {
+    if (err) return console.log('Error loading client secret file:', err);
+    // Authorize a client with credentials, then call the Google Drive API.
+    authorize(JSON.parse(content), listEvents);
+  });
 
-/**
- * To use OAuth2 authentication, we need access to a a CLIENT_ID, CLIENT_SECRET, AND REDIRECT_URI.  To get these credentials for your application, visit https://console.cloud.google.com/apis/credentials.
- */
-const keys = require('../../settings/client_secret.json');
+  /**
+   * Create an OAuth2 client with the given credentials, and then execute the
+   * given callback function.
+   * @param {Object} credentials The authorization client credentials.
+   * @param {function} callback The callback to call with the authorized client.
+   */
+  function authorize(credentials, callback) {
+    const {client_secret, client_id, redirect_uris} = credentials.web;
+    const oAuth2Client = new OAuth2Client(client_id, client_secret, redirect_uris[0]);
 
-/**
- * Create a new OAuth2 client with the configured keys.
- */
-const oauth2Client = new google.auth.OAuth2(
-  keys.web.client_id,
-  keys.web.client_secret,
-  keys.web.redirect_uris[0]
-);
-
-/**
- * This is one of the many ways you can configure googleapis to use authentication credentials.  In this method, we're setting a global reference for all APIs.  Any other API you use here, like google.drive('v3'), will now use this auth client. You can also override the auth client at the service and method call levels.
- */
-google.options({ auth: oauth2Client });
-
-/**
- * Open an http server to accept the oauth callback. In this simple example, the only request to our webserver is to /callback?code=<code>
- */
-async function authenticate (scopes) {
-  return new Promise((resolve, reject) => {
-    // grab the url that will be used for authorization
-    const authorizeUrl = oauth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: scopes.join(' ')
+    // Check if we have previously stored a token.
+    fs.readFile(TOKEN_PATH, (err, token) => {
+      if (err) return getAccessToken(oAuth2Client, callback);
+      oAuth2Client.setCredentials(JSON.parse(token));
+      callback(oAuth2Client);
     });
-    const server = http.createServer(async (req, res) => {
-      try {
-        if (req.url.indexOf('/oauth2callback') > -1) {
-          const qs = querystring.parse(url.parse(req.url).query);
-          res.end('Authentication successful! Please return to the console.');
-          server.destroy();
-          const {tokens} = await oauth2Client.getToken(qs.code);
-          oauth2Client.credentials = tokens;
-          resolve(oauth2Client);
-        }
-      } catch (e) {
-        console.log('error', e);
-        reject(e);
-      }
-    }).listen(3000, () => {
-      // open the browser to the authorize url to start the workflow
-      opn(authorizeUrl, {wait: false}).then(cp => {
-        console.log('sfqsfsqfq', cp);
-        cp.unref()
+  }
+
+  /**
+   * Get and store new token after prompting for user authorization, and then
+   * execute the given callback with the authorized OAuth2 client.
+   * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
+   * @param {getEventsCallback} callback The callback for the authorized client.
+   */
+  function getAccessToken(oAuth2Client, callback) {
+    const authUrl = oAuth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: SCOPES,
+    });
+    console.log('Authorize this app by visiting this url:', authUrl);
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question('Enter the code from that page here: ', (code) => {
+      rl.close();
+      oAuth2Client.getToken(code, (err, token) => {
+        if (err) return callback(err);
+        oAuth2Client.setCredentials(token);
+        // Store the token to disk for later program executions
+        fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+          if (err) console.error(err);
+          console.log('Token stored to', TOKEN_PATH);
+        });
+        callback(oAuth2Client);
       });
     });
-    destroyer(server);
-  });
-}
-
-async function runSample () {
-  // retrieve user profile
-  const res = await plus.people.get({ userId: 'me' });
-  console.log(res.data);
-}
-
-const scopes = ['https://www.googleapis.com/auth/plus.me'];
-authenticate(scopes)
-  .then(client => runSample(client))
-  .catch(console.error);
   }
+
+  /**
+   * Lists the next 10 events on the user's primary calendar.
+   * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+   */
+  function listEvents(auth) {
+    const calendar = google.calendar({version: 'v3', auth});
+    calendar.events.list({
+      calendarId: 'primary',
+      timeMin: (new Date()).toISOString(),
+      maxResults: 10,
+      singleEvents: true,
+      orderBy: 'startTime',
+    }, (err, {data}) => {
+      if (err) return console.log('The API returned an error: ' + err);
+      const events = data.items;
+      if (events.length) {
+        console.log('Upcoming 10 events:');
+        events.map((event, i) => {
+          const start = event.start.dateTime || event.start.date;
+          console.log(`${start} - ${event.summary}`);
+        });
+      } else {
+        console.log('No upcoming events found.');
+      }
+    });
+  }
+}
 }
