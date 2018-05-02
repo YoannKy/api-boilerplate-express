@@ -1,3 +1,5 @@
 module.exports = (server) => {
-    server.utils = {};
+    server.utils = {        
+      google: require('./google')(server),
+    };
 };
