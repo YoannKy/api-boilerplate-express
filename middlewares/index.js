@@ -5,5 +5,6 @@ module.exports = (server) => {
         checkUnwantedBodyFields: require('./checkUnwantedBodyFields'),
         logger: require('./logger'),
         res: require('./res'),
+        googleOAuth2: require('./googleOAuth2')(server)
     };
 };
