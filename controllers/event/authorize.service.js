@@ -20,43 +20,35 @@ class Authorize {
         const {client_secret, client_id, redirect_uris} = credentials.web;
         const oAuth2Client = new OAuth2Client(client_id, client_secret, redirect_uris[0]);
 
-        // Check if we have previously stored a token.
-        fs.readFile(TOKEN_PATH, (err, token) => {
-            if (err) return getAccessToken(oAuth2Client, callback);
-            oAuth2Client.setCredentials(JSON.parse(token));
-            callback(oAuth2Client);
-        });
+
+       this.setAccessToken(oAuth2Client, callback);
+
     }
 
     /**
-     * Get and store new token after prompting for user authorization, and then
+     * set and store new token after prompting for user authorization, and then
      * execute the given callback with the authorized OAuth2 client.
      * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
      * @param {getEventsCallback} callback The callback for the authorized client.
      */
-    getAccessToken(oAuth2Client, callback) {
-        const authUrl = oAuth2Client.generateAuthUrl({
-            access_type: 'offline',
-            scope: SCOPES,
-        });
-        console.log('Authorize this app by visiting this url:', authUrl);
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-        rl.question('Enter the code from that page here: ', (code) => {
-            rl.close();
-            oAuth2Client.getToken(code, (err, token) => {
-            if (err) return callback(err);
-            oAuth2Client.setCredentials(token);
-            // Store the token to disk for later program executions
-            fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-                if (err) console.error(err);
-                console.log('Token stored to', TOKEN_PATH);
-            });
-            callback(oAuth2Client);
-            });
-        });
+    setAccessToken(oAuth2Client, callback) {
+      const o = {
+        "token_type": "Bearer",
+        "access_token": "ya29.GluwBWTRwkvxmHw1uN8BrtXSGM5JzjfmnVVB5OFGceouNmrv8nkGttkK9eDBIlhwv_jqTmj3hwxpUv2RWnpeZ4TigbfbI5Cs89_NZDx486djBAJ7HQjnZulOr1F4",
+        "scope": "https://www.googleapis.com/auth/calendar https://w…https://www.googleapis.com/auth/calendar.readonly",
+        "expires_at": "1525388445001",
+        "expires_in": "813",
+        "first_issued_at": "1525384845001"
+      };
+      oAuth2Client.setCredentials(o);
+      // Store the token to disk for later program executions
+      fs.writeFile(TOKEN_PATH, JSON.stringify(o), (err) => {
+          if (err) console.error(err);
+          console.log('Token stored to', TOKEN_PATH);
+
+            oAuth2Client.setCredentials(o);
+          callback(oAuth2Client);
+      });
     }
 
 }

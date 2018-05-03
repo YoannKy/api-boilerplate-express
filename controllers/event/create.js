@@ -30,9 +30,11 @@ module.exports = (server) => {
     }
 
     function createCalendar(auth){
+
       const calendar = google.calendar({version: 'v3', auth});
       calendar.calendarList.list((err, { data }) => {
         if (err) return console.log('The API returned an error: ' + err);
+        console.log(data);
         const summary = data.items.filter(isEqualToCampaign);
         /**
          *  test if the calendar campaign already exist
@@ -58,8 +60,21 @@ module.exports = (server) => {
       calendar.events.insert({
         auth: auth,
         calendarId: calendarId,
-        resource: req.body,
-      }, function(err, event) {
+        resource: {
+          'summary': 'Google I/O 2015',
+            'location': '800 Howard St., San Francisco, CA 94103',
+            'description': 'A chance to hear more about Google\'s developer products.',
+            'start': {
+              'dateTime': '2018-05-28T09:00:00-07:00',
+              'timeZone': 'America/Los_Angeles'
+            },
+            'end': {
+              'dateTime': '2018-05-28T17:00:00-07:00',
+              'timeZone': 'America/Los_Angeles'
+            },
+          }
+        }, function(err, event) {
+          console.log(event);
         if (err) {
           console.log('There was an error contacting the Calendar service: ' + err);
           return;

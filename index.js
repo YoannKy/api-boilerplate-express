@@ -7,7 +7,7 @@ require('./middlewares')(server);
 require('./controllers')(server);
 require('./routes')(server);
 
-console.log(`Server listening on port ${server.settings.port}`);
-server.listen(server.settings.port);
+console.log(`Server listening on port 4000`);
+server.listen(4000);
 
 module.exports = server;

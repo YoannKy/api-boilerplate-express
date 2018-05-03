@@ -19,6 +19,6 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "nodemon"
+    "start": "nodemon  --ignore 'credentials.json'"
   }
 }

@@ -4,6 +4,5 @@ module.exports = (server) => {
         checkMandatoryBodyFields: require('./checkMandatoryBodyFields'),
         checkUnwantedBodyFields: require('./checkUnwantedBodyFields'),
         logger: require('./logger'),
-        res: require('./res'),
     };
 };
