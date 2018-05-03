@@ -39,17 +39,16 @@ module.exports = (server) => {
          *  if not, create a new calendar campaign and keep his ID for the event creation
          *  or, just keep his ID if he already exist for the event creation
          */
-        if(summary.length == 0){
-          /* create Calendar */
-          calendar.calendars.insert({
-            auth: auth,
-            resource: {summary: "campaign"}
-          }, (err, data) => {
-            createEvent(auth, data.data.id);
-          });
-        } else {
-          createEvent(auth, summary[0].id);
-        }
+        if(summary.length !== 0) return createEvent(auth, summary[0].id);
+
+        /* create Calendar */
+        calendar.calendars.insert({
+          auth: auth,
+          resource: {summary: "campaign"}
+        }, (err, data) => {
+          if (err) return console.log('The API returned an error: ' + err);
+          createEvent(auth, data.data.id);
+        });
       });
     }
 

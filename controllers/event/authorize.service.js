@@ -9,7 +9,6 @@
   const TOKEN_PATH = 'credentials.json';
 
 class Authorize {
-    constructor(){}
 
     /**
      * Create an OAuth2 client with the given credentials, and then execute the
