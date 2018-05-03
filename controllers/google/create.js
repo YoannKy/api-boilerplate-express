@@ -20,14 +20,14 @@ const mkdirp = require('mkdirp');
 const readline = require('readline');
 const {google} = require('googleapis');
 const OAuth2Client = google.auth.OAuth2;
-const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const TOKEN_PATH = 'credentials.json';
 console.log(process.cwd());
 // Load client secrets from a local file.
   fs.readFile('./settings/client_secret.json', (err, content) => {
     if (err) return console.log('Error loading client secret file:', err);
     // Authorize a client with credentials, then call the Google Drive API.
-    authorize(JSON.parse(content), listEvents);
+    authorize(JSON.parse(content), createEvents);
   });
 
   /**
@@ -83,27 +83,48 @@ console.log(process.cwd());
    * Lists the next 10 events on the user's primary calendar.
    * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
    */
-  function listEvents(auth) {
+  // function listEvents(auth) {
+  //   const calendar = google.calendar({version: 'v3', auth});
+  //   calendar.events.list({
+  //     calendarId: 'primary',
+  //     timeMin: (new Date()).toISOString(),
+  //     maxResults: 10,
+  //     singleEvents: true,
+  //     orderBy: 'startTime',
+  //   }, (err, {data}) => {
+  //     if (err) return console.log('The API returned an error: ' + err);
+  //     const events = data.items;
+  //     if (events.length) {
+  //       console.log('Upcoming 10 events:');
+  //       events.map((event, i) => {
+  //         const start = event.start.dateTime || event.start.date;
+  //         console.log(`${start} - ${event.summary}`);
+  //       });
+  //     } else {
+  //       console.log('No upcoming events found.');
+  //     }
+  //   });
+  // }
+
+  /**
+   * create event on calendar
+   * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+   */
+  function createEvent(auth){
     const calendar = google.calendar({version: 'v3', auth});
-    calendar.events.list({
+
+    calendar.events.insert({
+      auth: auth,
       calendarId: 'primary',
-      timeMin: (new Date()).toISOString(),
-      maxResults: 10,
-      singleEvents: true,
-      orderBy: 'startTime',
-    }, (err, {data}) => {
-      if (err) return console.log('The API returned an error: ' + err);
-      const events = data.items;
-      if (events.length) {
-        console.log('Upcoming 10 events:');
-        events.map((event, i) => {
-          const start = event.start.dateTime || event.start.date;
-          console.log(`${start} - ${event.summary}`);
-        });
-      } else {
-        console.log('No upcoming events found.');
+      resource: event,
+    }, function(err, event) {
+      if (err) {
+        console.log('There was an error contacting the Calendar service: ' + err);
+        return;
       }
+      console.log('Event created: %s', event.htmlLink);
     });
   }
+
 }
 }
