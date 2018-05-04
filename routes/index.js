@@ -1,16 +1,16 @@
 module.exports = (server) => {
-    server.use(server.middlewares.logger);
-    server.use(server.middlewares.bodyParser.urlencoded({
-        extended: true
-    }));
-    server.use(server.middlewares.bodyParser.json());
-    server.use(function(req, res, next) {
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT,DELETE");
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-        next();
-    });
+  server.use(server.middlewares.logger);
+  server.use(server.middlewares.bodyParser.urlencoded({
+    extended: true
+  }));
+  server.use(server.middlewares.bodyParser.json());
+  server.use(function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS,PUT,DELETE');
+    res.header('Access-Control-Allow-Headers', 'X-UI, X-Access-Token, Origin, X-Requested-With, Content-Type, Accept');
+    next();
+  });
 
-    server.use('/', require('./home')(server));
-    server.use('/event', require('./event')(server));
+  server.use('/', require('./home')(server));
+  server.use('/event', require('./event')(server));
 };
